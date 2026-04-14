@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0f10">
+<title>Command Center</title>
+<style>
+  :root {
+    --bg: #0f0f10;
+    --surface: #1a1a1c;
+    --surface-2: #232326;
+    --border: #2e2e32;
+    --text: #ededed;
+    --text-dim: #9a9a9f;
+    --text-faint: #666669;
+    --accent: #7f77dd;
+    --accent-bg: #2a2740;
+    --danger: #e24b4a;
+    --danger-bg: #3a1515;
+    --success: #5dcaa5;
+    --radius: 10px;
+    --co-A-bg: #2a2740;  --co-A-text: #afa9ec;
+    --co-B-bg: #143028;  --co-B-text: #5dcaa5;
+    --co-C-bg: #3a1d10;  --co-C-text: #f0997b;
+    --co-D-bg: #2e1a2e;  --co-D-text: #ed93b1;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --surface-2: #f1efe8;
+      --border: #e4e2db;
+      --text: #1a1a1a;
+      --text-dim: #5f5e5a;
+      --text-faint: #9a9a9f;
+      --accent: #534ab7;
+      --accent-bg: #eeedfe;
+      --danger: #a32d2d;
+      --danger-bg: #fceaea;
+      --co-A-bg: #eeedfe;  --co-A-text: #3c3489;
+      --co-B-bg: #e1f5ee;  --co-B-text: #085041;
+      --co-C-bg: #faece7;  --co-C-text: #712b13;
+      --co-D-bg: #fbeaf0;  --co-D-text: #72243e;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+  body { padding: 16px; max-width: 720px; margin: 0 auto; padding-bottom: 100px; }
+  h1 { margin: 0 0 2px; font-size: 22px; font-weight: 600; }
+  h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .subtitle { color: var(--text-dim); font-size: 13px; margin: 0 0 20px; }
+  .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .date { font-size: 12px; color: var(--text-faint); }
+
+  .capture { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 20px; }
+  .capture input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; outline: none; margin-bottom: 10px; }
+  .capture input[type="text"]:focus { border-color: var(--accent); }
+  .field-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 6px; font-weight: 600; }
+  .co-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .co-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 4px; color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .co-btn:active { transform: scale(0.97); }
+  .co-btn.co-A.selected { background: var(--co-A-bg); color: var(--co-A-text); border-color: var(--co-A-text); }
+  .co-btn.co-B.selected { background: var(--co-B-bg); color: var(--co-B-text); border-color: var(--co-B-text); }
+  .co-btn.co-C.selected { background: var(--co-C-bg); color: var(--co-C-text); border-color: var(--co-C-text); }
+  .co-btn.co-D.selected { background: var(--co-D-bg); color: var(--co-D-text); border-color: var(--co-D-text); }
+
+  .sender-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sender-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 7px 14px; color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; }
+  .sender-btn:active { transform: scale(0.97); }
+  .sender-btn.vip { border-color: var(--danger); }
+  .sender-btn.selected { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+  .sender-btn.vip.selected { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+
+  .priority-hint { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 12px; padding: 8px 12px; background: var(--surface-2); border-radius: 6px; color: var(--text-dim); }
+  .priority-hint.urgent { background: var(--danger-bg); color: var(--danger); font-weight: 600; }
+
+  .add-btn { width: 100%; background: var(--accent); color: white; border: none; border-radius: 8px; padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+  .add-btn:active { transform: scale(0.98); }
+
+  .section { margin-bottom: 24px; }
+  .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+  .section-head h2 { margin: 0; }
+  .mini-btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text-dim); font-size: 12px; cursor: pointer; }
+  .mini-btn:hover { color: var(--text); }
+  .mini-btn.active { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+  .filters { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+
+  .task { display: flex; align-items: flex-start; gap: 10px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; }
+  .task.done { opacity: 0.45; }
+  .task.done .task-text { text-decoration: line-through; }
+  .task.urgent { border-left: 3px solid var(--danger); }
+  .task-num { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+  .task-num.top { background: var(--accent-bg); color: var(--accent); }
+  .task-check { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 5px; background: transparent; cursor: pointer; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; }
+  .task-check.checked { background: var(--success); border-color: var(--success); }
+  .task-check.checked::after { content: '✓'; color: #04342c; font-size: 13px; font-weight: 700; }
+  .task-body { flex: 1; min-width: 0; }
+  .task-text { font-size: 14px; word-wrap: break-word; }
+  .task-meta { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--surface-2); color: var(--text-dim); font-weight: 600; }
+  .tag.co-A { background: var(--co-A-bg); color: var(--co-A-text); }
+  .tag.co-B { background: var(--co-B-bg); color: var(--co-B-text); }
+  .tag.co-C { background: var(--co-C-bg); color: var(--co-C-text); }
+  .tag.co-D { background: var(--co-D-bg); color: var(--co-D-text); }
+  .tag.urgent { background: var(--danger-bg); color: var(--danger); }
+  .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .icon-btn { background: none; border: none; color: var(--text-faint); cursor: pointer; padding: 4px 6px; font-size: 16px; border-radius: 4px; }
+  .icon-btn:hover { color: var(--text); background: var(--surface-2); }
+  .icon-btn.starred { color: #ffc043; }
+
+  .empty { padding: 20px; text-align: center; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); font-size: 13px; color: var(--text-dim); }
+
+  .stat-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; text-align: center; }
+  .stat.urgent { border-color: var(--danger); }
+  .stat.urgent .stat-num { color: var(--danger); }
+  .stat-num { font-size: 20px; font-weight: 600; color: var(--text); }
+  .stat-label { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 16px; display: flex; gap: 8px; justify-content: center; }
+  .bottom-bar button { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; flex: 1; max-width: 130px; }
+  .bottom-bar button:active { transform: scale(0.97); }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); padding: 20px; max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); }
+  .modal h3 { margin: 0 0 10px; font-size: 17px; }
+  .modal p { color: var(--text-dim); font-size: 14px; margin: 0 0 14px; }
+  .modal button { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; cursor: pointer; margin-right: 8px; margin-top: 4px; }
+  .modal button.secondary { background: var(--surface-2); color: var(--text); }
+  .modal input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--text); font-size: 14px; margin-bottom: 8px; }
+  .vip-item { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .vip-item input { margin: 0 !important; }
+  .vip-item button { background: var(--surface-2); color: var(--text-dim); padding: 8px 12px; margin: 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Command center</h1>
+  <span class="date" id="dateLabel"></span>
+</div>
+<p class="subtitle">Capture fast. Focus on three. Ship.</p>
+
+<div class="stat-row">
+  <div class="stat urgent"><div class="stat-num" id="statUrgent">0</div><div class="stat-label">Urgent</div></div>
+  <div class="stat"><div class="stat-num" id="statOpen">0</div><div class="stat-label">Open</div></div>
+  <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label">Done today</div></div>
+</div>
+
+<div class="capture">
+  <input type="text" id="taskInput" placeholder="What just came in? (3-5 words is fine)" autocomplete="off" />
+  <div class="field-label">Company</div>
+  <div class="co-grid" id="coGrid"></div>
+  <div class="field-label">From</div>
+  <div class="sender-grid" id="senderGrid"></div>
+  <div class="priority-hint" id="priorityHint">Priority: Medium — pick sender for auto-priority</div>
+  <button class="add-btn" onclick="addTask()">Add task</button>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Today's three</h2>
+    <button class="mini-btn" onclick="autoPickThree()">Pick for me</button>
+  </div>
+  <div id="todayList"></div>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>All tasks</h2>
+    <div class="filters" id="filterBar"></div>
+  </div>
+  <div id="allList"></div>
+</div>
+
+<div class="bottom-bar">
+  <button onclick="openModal('panic')">🧘 Panic</button>
+  <button onclick="openModal('start')">🎯 Start</button>
+  <button onclick="openModal('review')">📋 Review</button>
+  <button onclick="openModal('settings')">⚙️</button>
+</div>
+
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const KEY = 'cmdcenter_v2';
+
+const defaultState = {
+  tasks: [],
+  today: { date: '', ids: [] },
+  selectedCo: 'A',
+  selectedSender: null,
+  filter: 'all',
+  companies: [
+    { id: 'A', name: 'Algo8' },
+    { id: 'B', name: 'Ikigai' },
+    { id: 'C', name: 'V11' },
+    { id: 'D', name: 'SapienOne' }
+  ],
+  vips: ['CEO', 'Ramesh sir', 'Amaresh sir', 'Abhay sir', 'Shashank sir'],
+  otherSenders: ['Team', 'Self', 'Client']
+};
+
+let state = JSON.parse(JSON.stringify(defaultState));
+
+function load() {
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...defaultState, ...parsed };
+    }
+  } catch(e) {}
+  if (state.today.date !== todayStr()) state.today = { date: todayStr(), ids: [] };
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s) { return escapeHtml(s).replace(/'/g,'&#39;'); }
+
+function renderCompanyGrid() {
+  document.getElementById('coGrid').innerHTML = state.companies.map(c =>
+    `<button class="co-btn co-${c.id} ${state.selectedCo === c.id ? 'selected' : ''}" onclick="selectCo('${c.id}')">${escapeHtml(c.name)}</button>`
+  ).join('');
+}
+
+function renderSenderGrid() {
+  const vipHtml = state.vips.map(v =>
+    `<button class="sender-btn vip ${state.selectedSender === v ? 'selected' : ''}" onclick="selectSender('${escapeAttr(v)}')">🔥 ${escapeHtml(v)}</button>`
+  ).join('');
+  const otherHtml = state.otherSenders.map(s =>
+    `<button class="sender-btn ${state.selectedSender === s ? 'selected' : ''}" onclick="selectSender('${escapeAttr(s)}')">${escapeHtml(s)}</button>`
+  ).join('');
+  document.getElementById('senderGrid').innerHTML = vipHtml + otherHtml;
+  updatePriorityHint();
+}
+
+function renderFilterBar() {
+  const filters = [{id:'all',label:'All'}, {id:'urgent',label:'🔥'}, ...state.companies.map(c=>({id:c.id,label:c.name}))];
+  document.getElementById('filterBar').innerHTML = filters.map(f =>
+    `<button class="mini-btn ${state.filter === f.id ? 'active' : ''}" onclick="setFilter('${f.id}')">${escapeHtml(f.label)}</button>`
+  ).join('');
+}
+
+function selectCo(id) { state.selectedCo = id; renderCompanyGrid(); }
+function selectSender(name) {
+  state.selectedSender = state.selectedSender === name ? null : name;
+  renderSenderGrid();
+}
+function isVip(name) { return state.vips.includes(name); }
+
+function updatePriorityHint() {
+  const hint = document.getElementById('priorityHint');
+  if (state.selectedSender && isVip(state.selectedSender)) {
+    hint.className = 'priority-hint urgent';
+    hint.textContent = '🔥 URGENT — from ' + state.selectedSender;
+  } else if (state.selectedSender) {
+    hint.className = 'priority-hint';
+    hint.textContent = 'Priority: Normal — from ' + state.selectedSender;
+  } else {
+    hint.className = 'priority-hint';
+    hint.textContent = 'Priority: Normal — pick sender for auto-priority';
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const urgent = state.selectedSender && isVip(state.selectedSender);
+  state.tasks.push({
+    id: Date.now() + Math.random(),
+    text, company: state.selectedCo,
+    sender: state.selectedSender || null,
+    prio: urgent ? 1 : 2,
+    done: false, created: Date.now()
+  });
+  input.value = '';
+  state.selectedSender = null;
+  renderSenderGrid();
+  save(); render();
+  input.focus();
+}
+
+function toggleDone(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  if (t.done) { t.doneAt = Date.now(); state.today.ids = state.today.ids.filter(i => i !== id); }
+  save(); render();
+}
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  state.today.ids = state.today.ids.filter(i => i !== id);
+  save(); render();
+}
+function pinToday(id) {
+  if (state.today.ids.includes(id)) state.today.ids = state.today.ids.filter(i => i !== id);
+  else { if (state.today.ids.length >= 3) state.today.ids.shift(); state.today.ids.push(id); }
+  save(); render();
+}
+function autoPickThree() {
+  const open = state.tasks.filter(t => !t.done);
+  open.sort((a,b) => a.prio - b.prio || a.created - b.created);
+  state.today.ids = open.slice(0,3).map(t => t.id);
+  save(); render();
+}
+function setFilter(f) { state.filter = f; renderFilterBar(); render(); }
+function clearDone() {
+  if (!confirm('Clear all completed tasks?')) return;
+  state.tasks = state.tasks.filter(t => !t.done);
+  save(); render();
+}
+
+function taskRow(t, index, isToday) {
+  const starred = state.today.ids.includes(t.id);
+  const co = state.companies.find(c => c.id === t.company);
+  const urgent = t.prio === 1;
+  return `
+    <div class="task ${t.done ? 'done' : ''} ${urgent ? 'urgent' : ''}">
+      ${isToday ? `<div class="task-num ${index===0?'top':''}">${index+1}</div>` : ''}
+      <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleDone(${t.id})"></div>
+      <div class="task-body">
+        <div class="task-text">${escapeHtml(t.text)}</div>
+        <div class="task-meta">
+          <span class="tag co-${t.company}">${escapeHtml(co ? co.name : t.company)}</span>
+          ${urgent ? '<span class="tag urgent">🔥 URGENT</span>' : ''}
+          ${t.sender ? `<span class="tag">${escapeHtml(t.sender)}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-actions">
+        ${!isToday ? `<button class="icon-btn ${starred?'starred':''}" onclick="pinToday(${t.id})">${starred?'★':'☆'}</button>` : ''}
+        <button class="icon-btn" onclick="deleteTask(${t.id})">×</button>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'});
+  const open = state.tasks.filter(t => !t.done);
+  const urgent = open.filter(t => t.prio === 1);
+  const doneToday = state.tasks.filter(t => t.done && t.doneAt && (new Date(t.doneAt)).toISOString().slice(0,10) === todayStr());
+  document.getElementById('statUrgent').textContent = urgent.length;
+  document.getElementById('statOpen').textContent = open.length;
+  document.getElementById('statDone').textContent = doneToday.length;
+
+  const todayEl = document.getElementById('todayList');
+  const todayTasks = state.today.ids.map(id => state.tasks.find(t => t.id === id)).filter(Boolean);
+  todayEl.innerHTML = todayTasks.length
+    ? todayTasks.map((t,i) => taskRow(t, i, true)).join('')
+    : `<div class="empty">No tasks picked. Tap ★ below or hit "Pick for me".</div>`;
+
+  const allEl = document.getElementById('allList');
+  let shown = state.tasks.slice();
+  if (state.filter === 'urgent') shown = shown.filter(t => t.prio === 1);
+  else if (state.filter !== 'all') shown = shown.filter(t => t.company === state.filter);
+  shown.sort((a,b) => (a.done - b.done) || a.prio - b.prio || b.created - a.created);
+  allEl.innerHTML = shown.length
+    ? shown.map(t => taskRow(t, 0, false)).join('')
+    : `<div class="empty">Nothing here. Capture something above.</div>`;
+}
+
+function openModal(kind) {
+  const m = document.getElementById('modalContent');
+  if (kind === 'panic') {
+    m.innerHTML = `<h3>🧘 2-minute reset</h3><p>Panic = working memory full. It's a signal, not a verdict.</p>
+      <ol style="color: var(--text-dim); font-size: 14px; line-height: 1.8;">
+        <li><strong>Breathe</strong> — 4s in, 6s out. Four times.</li>
+        <li><strong>Close</strong> every tab and chat except this.</li>
+        <li><strong>Dump everything</strong> in your head into the box above.</li>
+        <li><strong>Hit "Pick for me"</strong>. Trust the system.</li>
+        <li><strong>Look at #1 only.</strong> Ignore the rest.</li>
+        <li><strong>15-min timer.</strong> Start. That's the whole job.</li>
+      </ol><button onclick="closeModal()">Got it</button>`;
+  } else if (kind === 'start') {
+    const top = state.today.ids[0] ? state.tasks.find(t => t.id === state.today.ids[0]) : null;
+    m.innerHTML = `<h3>🎯 Shrink it</h3><p>Brain won't start because it feels too big. Shrink until stupid-small.</p>
+      ${top ? `<div style="background: var(--surface-2); padding: 12px; border-radius: 8px; margin-bottom: 14px;"><strong>Your #1:</strong><br>${escapeHtml(top.text)}</div>` : ''}
+      <p><strong>What's the first physical action?</strong> Not "write report" — "open doc, type title".</p>
+      <ul style="color: var(--text-dim); font-size: 14px; line-height: 1.8;">
+        <li>Under 2 minutes</li><li>Physical (click, type, open)</li><li>No thinking required</li>
+      </ul><button onclick="closeModal()">On it</button>`;
+  } else if (kind === 'review') {
+    const open = state.tasks.filter(t => !t.done);
+    const byCo = {};
+    state.companies.forEach(c => byCo[c.id] = 0);
+    open.forEach(t => { if (byCo[t.company] !== undefined) byCo[t.company]++; });
+    const urgentCount = open.filter(t => t.prio === 1).length;
+    const coLines = state.companies.map(c => `${escapeHtml(c.name)}: ${byCo[c.id]}`).join(' · ');
+    m.innerHTML = `<h3>📋 Weekly review</h3><p>20 minutes. Friday or Sunday.</p>
+      <div style="background: var(--surface-2); padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 14px;">
+        <div><strong>${open.length}</strong> open · <strong style="color: var(--danger);">${urgentCount}</strong> urgent</div>
+        <div style="color: var(--text-dim); margin-top: 6px; font-size: 12px;">${coLines}</div>
+      </div>
+      <p><strong>For each open task ask:</strong></p>
+      <ol style="color: var(--text-dim); font-size: 14px; line-height: 1.8;">
+        <li>Still relevant? (No → delete)</li><li>Actually mine? (No → delegate)</li>
+        <li>Real priority? (Update)</li><li>Waiting on someone? (Nudge now)</li>
+      </ol><button onclick="closeModal()">Done</button>
+      <button class="secondary" onclick="clearDone(); closeModal();">Clear completed</button>`;
+  } else if (kind === 'settings') {
+    const companyInputs = state.companies.map(c =>
+      `<input type="text" id="co-${c.id}" value="${escapeAttr(c.name)}" placeholder="Company ${c.id}" />`
+    ).join('');
+    const vipInputs = state.vips.map((v,i) =>
+      `<div class="vip-item"><input type="text" id="vip-${i}" value="${escapeAttr(v)}" /><button onclick="removeVip(${i})">×</button></div>`
+    ).join('');
+    const otherInputs = state.otherSenders.map((s,i) =>
+      `<div class="vip-item"><input type="text" id="other-${i}" value="${escapeAttr(s)}" /><button onclick="removeOther(${i})">×</button></div>`
+    ).join('');
+    m.innerHTML = `<h3>⚙️ Settings</h3>
+      <p style="font-size: 13px; margin-bottom: 6px;"><strong>Companies</strong></p>
+      ${companyInputs}
+      <p style="font-size: 13px; margin-top: 16px; margin-bottom: 6px;"><strong>🔥 VIPs</strong> — tasks from these people auto-flag urgent</p>
+      ${vipInputs}
+      <button class="secondary" onclick="addVip()" style="padding: 8px 12px; font-size: 12px;">+ Add VIP</button>
+      <p style="font-size: 13px; margin-top: 16px; margin-bottom: 6px;"><strong>Other senders</strong></p>
+      ${otherInputs}
+      <button class="secondary" onclick="addOther()" style="padding: 8px 12px; font-size: 12px;">+ Add sender</button>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <button onclick="saveSettings()">Save all</button>
+        <button class="secondary" onclick="exportData()">Export</button>
+        <button class="secondary" onclick="importData()">Import</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-faint); margin-top: 12px;">Data is in this browser only. Export to back up.</p>`;
+  }
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function addVip() {
+  state.vips = Array.from(document.querySelectorAll('[id^="vip-"]')).map(i => i.value).concat(['New VIP']);
+  openModal('settings');
+}
+function removeVip(i) {
+  const arr = Array.from(document.querySelectorAll('[id^="vip-"]')).map(x => x.value);
+  arr.splice(i, 1);
+  state.vips = arr;
+  openModal('settings');
+}
+function addOther() {
+  state.otherSenders = Array.from(document.querySelectorAll('[id^="other-"]')).map(i => i.value).concat(['New']);
+  openModal('settings');
+}
+function removeOther(i) {
+  const arr = Array.from(document.querySelectorAll('[id^="other-"]')).map(x => x.value);
+  arr.splice(i, 1);
+  state.otherSenders = arr;
+  openModal('settings');
+}
+
+function saveSettings() {
+  state.companies.forEach(c => {
+    const el = document.getElementById('co-' + c.id);
+    if (el) c.name = el.value.trim() || c.name;
+  });
+  state.vips = Array.from(document.querySelectorAll('[id^="vip-"]')).map(i => i.value.trim()).filter(Boolean);
+  state.otherSenders = Array.from(document.querySelectorAll('[id^="other-"]')).map(i => i.value.trim()).filter(Boolean);
+  save();
+  renderCompanyGrid(); renderSenderGrid(); renderFilterBar(); render();
+  closeModal();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'command-center-' + todayStr() + '.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (parsed.tasks) {
+          state = { ...defaultState, ...parsed };
+          save();
+          renderCompanyGrid(); renderSenderGrid(); renderFilterBar(); render();
+          closeModal();
+          alert('Imported');
+        }
+      } catch(err) { alert('Invalid file'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+document.getElementById('taskInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+load();
+renderCompanyGrid();
+renderSenderGrid();
+renderFilterBar();
+render();
+</script>
+</body>
+</html>
